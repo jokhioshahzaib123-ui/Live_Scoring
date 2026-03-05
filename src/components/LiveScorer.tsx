@@ -17,6 +17,8 @@ export default function LiveScorer({ match, players, initialBalls, onBallAdded, 
   const [strikerId, setStrikerId] = useState('');
   const [nonStrikerId, setNonStrikerId] = useState('');
   const [bowlerId, setBowlerId] = useState('');
+  const [showWicketModal, setShowWicketModal] = useState(false);
+  const [selectedWicketType, setSelectedWicketType] = useState<string>('Bowled');
 
   // Derived stats
   const stats = useMemo(() => {
@@ -176,7 +178,7 @@ export default function LiveScorer({ match, players, initialBalls, onBallAdded, 
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <button 
-          onClick={() => addBall(0, 0, undefined, 1, 'Bowled')}
+          onClick={() => setShowWicketModal(true)}
           className="py-4 glass rounded-2xl font-bold text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95"
         >
           WICKET
@@ -274,6 +276,56 @@ export default function LiveScorer({ match, players, initialBalls, onBallAdded, 
           </table>
         </div>
       </div>
+
+      {/* Wicket Modal */}
+      <AnimatePresence>
+        {showWicketModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowWicketModal(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-zinc-900 rounded-3xl p-8 z-50 max-w-md w-full mx-4 border border-white/10"
+            >
+              <h2 className="text-2xl font-black mb-6">How is {players.find(p => p.id === strikerId)?.name} out?</h2>
+              
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {['Bowled', 'Caught', 'LBW', 'Stumped', 'Run Out', 'Hit Wicket'].map(type => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      setSelectedWicketType(type);
+                      addBall(0, 0, undefined, 1, type);
+                      setShowWicketModal(false);
+                    }}
+                    className={`py-3 rounded-xl font-bold text-sm transition-all ${
+                      selectedWicketType === type
+                        ? 'bg-red-500 text-white'
+                        : 'glass text-zinc-300 hover:bg-red-500/20'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowWicketModal(false)}
+                className="w-full py-3 glass rounded-xl font-bold hover:bg-zinc-700 transition-all"
+              >
+                Cancel
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
